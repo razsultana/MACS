@@ -1,4 +1,4 @@
-# Time-stamp: <2016-05-19 10:22:22 Tao Liu>
+# Time-stamp: <2017-07-17 15:12:57 Tao Liu>
 
 """Module for Calculate Scores.
 
@@ -1781,8 +1781,10 @@ cdef class CallerFromAlignments:
         """
         
         cdef:
-            int blockNum, start, end
-            str blockSizes, blockStarts, thickStart, thickEnd, 
+            object lvl1peak
+            int blockNum, start, end, total_l_lvl1, l
+            str blockSizes, blockStarts, thickStart, thickEnd,
+            float fold_change, pscore, qscore, pileup
 
         #print lvl2peak["start"], lvl2peak["end"], lvl2peak["score"]
         start      = lvl2peak["start"]
@@ -1792,10 +1794,12 @@ cdef class CallerFromAlignments:
             #try:
             # will complement by adding 1bps start and end to this region
             # may change in the future if gappedPeak format was improved.
-            bpeaks.add(chrom, start, end, score=lvl2peak["score"], thickStart=str(start), thickEnd=str(end),
-                       blockNum = 2, blockSizes = "1,1", blockStarts = "0,"+str(end-start-1), pileup = lvl2peak["pileup"],
-                       pscore = lvl2peak["pscore"], fold_change = lvl2peak["fc"],
-                       qscore = lvl2peak["qscore"] )
+            # 7/15/2017 I commented the following code to ignore those broad peaks with NO valid strong peak inside.
+            #bpeaks.add(chrom, start, end, score=lvl2peak["score"], thickStart=str(start), thickEnd=str(end),
+            #           blockNum = 2, blockSizes = "1,1", blockStarts = "0,"+str(end-start-1), pileup = lvl2peak["pileup"],
+            #           pscore = lvl2peak["pscore"], fold_change = lvl2peak["fc"],
+            #           qscore = lvl2peak["qscore"] )
+            # end of 7/15/2017 changes
             #except:
             #    print [ chrom, start, end, lvl2peak["score"],".", ".",
             #            0, ".", ".", lvl2peak["pileup"],
@@ -1824,10 +1828,25 @@ cdef class CallerFromAlignments:
             blockSizes = blockSizes+",1"
             blockStarts = blockStarts+","+str(end-start-1)
         
+        # 7/15/2017 Calculate pscore,qscore, foldchange as the average in lvl1 peaks only.
+        total_l_lvl1 = 0
+        for lvl1peak in lvl1peakset:
+            l = lvl1peak["end"] - lvl1peak["start"]
+            pileup += lvl1peak["pileup"]*l
+            fold_change += lvl1peak["fc"]*l
+            pscore += lvl1peak["pscore"]*l
+            qscore += lvl1peak["qscore"]*l
+            total_l_lvl1 += l
+        pileup /= total_l_lvl1
+        fold_change /= total_l_lvl1
+        pscore /= total_l_lvl1
+        qscore /= total_l_lvl1
+
         bpeaks.add(chrom, start, end, score=lvl2peak["score"], thickStart=thickStart, thickEnd=thickEnd,
-                   blockNum = blockNum, blockSizes = blockSizes, blockStarts = blockStarts, pileup = lvl2peak["pileup"],
-                   pscore = lvl2peak["pscore"], fold_change = lvl2peak["fc"],
-                   qscore = lvl2peak["qscore"] )
+                   blockNum = blockNum, blockSizes = blockSizes, blockStarts = blockStarts,
+                   # 7/15/2017 use lvl1 average as scores for broadpeak instead of lvl2.
+                   #pileup = lvl2peak["pileup"], pscore = lvl2peak["pscore"], fold_change = lvl2peak["fc"], qscore = lvl2peak["qscore"] )
+                   pileup = pileup, pscore = pscore, fold_change = fold_change, qscore = qscore )
         return bpeaks
 
     cpdef refine_peak_from_tags_distribution ( self, peaks, int window_size = 100, float cutoff = 5 ):

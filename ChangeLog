@@ -1,3 +1,16 @@
+2017-07-17  Tao Liu  <vladimir.liu@gmail.com>
+	MACS versino 2.1.1 20170717 (beta)
+
+	* Change the mechanism to call broadpeak:
+
+	1) Require broadPeak being called must contains at least 1 strong
+	peak (lvl1 peak);
+
+	2) Scores for broadPeak are average of scores in strong peaks
+	only. Previously, the scores are the average scores within entire
+	broadPeak regions. These include pileup, qscore, pscore and
+	foldchange.
+
 2016-03-09  Tao Liu  <vladimir.liu@gmail.com>
 	MACS version 2.1.1 20160309
 
