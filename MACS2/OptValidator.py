@@ -1,4 +1,4 @@
-# Time-stamp: <2016-02-15 14:57:27 Tao Liu>
+# Time-stamp: <2018-05-04 15:08:19 Tao Liu>
 
 """Module Description
 
@@ -190,6 +190,15 @@ def opt_validate ( options ):
         else:
             options.argtxt +=  "# qvalue cutoff = %.2e\n" % (options.qvalue)
 
+    if options.maxgap != 0:
+        options.argtxt += "# max. gap between significant sites = %d\n" % options.maxgap
+    else:
+        options.argtxt += "# max. gap between significant sites is set as tag size by MACS2. Please check the information below.\n" 
+    if options.minlen != 0:
+        options.argtxt += "# min. length of peaks = %d\n" % options.minlen
+    else:
+        options.argtxt += "# min. length of peaks is set as fragment size by MACS2. Please check the information below.\n"
+
     if options.downsample:
         options.argtxt += "# Larger dataset will be randomly sampled towards smaller dataset.\n"
         if options.seed >= 0:
@@ -362,6 +371,8 @@ def opt_validate_filterdup ( options ):
         options.parser = ELANDResultParser
     elif options.format == "BED":
         options.parser = BEDParser
+    elif options.format == "BEDPE":
+        options.parser = BEDPEParser
     elif options.format == "ELANDMULTI":
         options.parser = ELANDMultiParser
     elif options.format == "ELANDEXPORT":

@@ -1,4 +1,4 @@
-# Time-stamp: <2015-03-05 15:37:59 Tao Liu>
+# Time-stamp: <2018-05-04 14:36:42 Tao Liu>
 
 """Module Description
 
@@ -42,8 +42,8 @@ class PeakDetect:
     >>> pd = PeakDetect(treat=treatdata, control=controldata, pvalue=pvalue_cutoff, d=100, gsize=3000000000)
     >>> pd.call_peaks()
     """
-    def __init__ (self,opt = None,treat = None, control = None, d = None,
-                  slocal = None, llocal = None):
+    def __init__ (self,opt = None,treat = None, control = None ):
+#                  maxgap = None, minlen = None, slocal = None, llocal = None):
         """Initialize the PeakDetect object.
 
         """
@@ -66,10 +66,16 @@ class PeakDetect:
                 
         self.log_pvalue = opt.log_pvalue    # -log10pvalue
         self.log_qvalue = opt.log_qvalue    # -log10qvalue
-        if d != None:
-            self.d = d
-        else:
-            self.d = self.opt.d
+        self.d = self.opt.d
+
+        # if maxgap is 0, set maxgap as tag size
+        if self.opt.maxgap == 0:
+            self.maxgap = self.opt.tsize
+
+        # if minlen is 0, set minlen as fragment size/d
+        if self.opt.minlen == 0:
+            self.minlen = self.opt.d
+            
         self.end_shift = self.opt.shift
         self.gsize = opt.gsize
         
@@ -243,26 +249,34 @@ class PeakDetect:
         if self.log_pvalue != None:
             if self.opt.broad:
                 self.info("#3 Call broad peaks with given level1 -log10pvalue cutoff and level2: %.5f, %.5f..." % (self.log_pvalue,self.opt.log_broadcutoff) )
-                peaks = scorecalculator.call_broadpeaks(['p',], lvl1_cutoff_s=[self.log_pvalue,],lvl2_cutoff_s=[self.opt.log_broadcutoff,],min_length=self.d,
-                                                        lvl1_max_gap=self.opt.tsize,lvl2_max_gap=self.d*4,
-                                                        auto_cutoff=self.opt.cutoff_analysis )
+                peaks = scorecalculator.call_broadpeaks(['p',],
+                                                    lvl1_cutoff_s=[self.log_pvalue,],
+                                                    lvl2_cutoff_s=[self.opt.log_broadcutoff,],
+                                                    min_length=self.minlen,
+                                                    lvl1_max_gap=self.maxgap,
+                                                    lvl2_max_gap=self.maxgap*4,
+                                                    auto_cutoff=self.opt.cutoff_analysis )
             else:
                 self.info("#3 Call peaks with given -log10pvalue cutoff: %.5f ..." % self.log_pvalue)
                 peaks = scorecalculator.call_peaks( ['p',], [self.log_pvalue,],
-                                                    min_length=self.d,
-                                                    max_gap=self.opt.tsize,
+                                                    min_length=self.minlen,
+                                                    max_gap=self.maxgap,
                                                     call_summits=call_summits,
                                                     auto_cutoff=self.opt.cutoff_analysis )
         elif self.log_qvalue != None:
             if self.opt.broad:
                 self.info("#3 Call broad peaks with given level1 -log10qvalue cutoff and level2: %f, %f..." % (self.log_qvalue,self.opt.log_broadcutoff) )
-                peaks = scorecalculator.call_broadpeaks(['q',], lvl1_cutoff_s=[self.log_qvalue,],lvl2_cutoff_s=[self.opt.log_broadcutoff,],min_length=self.d,
-                                                        lvl1_max_gap=self.opt.tsize,lvl2_max_gap=self.d*4,
-                                                        auto_cutoff=self.opt.cutoff_analysis )
+                peaks = scorecalculator.call_broadpeaks(['q',],
+                                                    lvl1_cutoff_s=[self.log_qvalue,],
+                                                    lvl2_cutoff_s=[self.opt.log_broadcutoff,],
+                                                    min_length=self.minlen,
+                                                    lvl1_max_gap=self.maxgap,
+                                                    lvl2_max_gap=self.maxgap*4,
+                                                    auto_cutoff=self.opt.cutoff_analysis )
             else:
                 peaks = scorecalculator.call_peaks( ['q',], [self.log_qvalue,],
-                                                    min_length=self.d,
-                                                    max_gap=self.opt.tsize,
+                                                    min_length=self.minlen,
+                                                    max_gap=self.maxgap,
                                                     call_summits=call_summits,
                                                     auto_cutoff=self.opt.cutoff_analysis )
         scorecalculator.destroy()
@@ -346,24 +360,34 @@ class PeakDetect:
         if self.log_pvalue != None:
             if self.opt.broad:
                 self.info("#3 Call broad peaks with given level1 -log10pvalue cutoff and level2: %.5f, %.5f..." % (self.log_pvalue,self.opt.log_broadcutoff) )
-                peaks = scorecalculator.call_broadpeaks(['p',], lvl1_cutoff_s=[self.log_pvalue,],lvl2_cutoff_s=[self.opt.log_broadcutoff,],min_length=self.d,
-                                                        lvl1_max_gap=self.opt.tsize,lvl2_max_gap=self.d*4)
+                peaks = scorecalculator.call_broadpeaks(['p',],
+                                                    lvl1_cutoff_s=[self.log_pvalue,],
+                                                    lvl2_cutoff_s=[self.opt.log_broadcutoff,],
+                                                    min_length=self.minlen,
+                                                    lvl1_max_gap=self.maxgap,
+                                                    lvl2_max_gap=self.maxgap*4,
+                                                    auto_cutoff=self.opt.cutoff_analysis )
             else:
                 self.info("#3 Call peaks with given -log10pvalue cutoff: %.5f ..." % self.log_pvalue)
                 peaks = scorecalculator.call_peaks( ['p',], [self.log_pvalue,],
-                                                    min_length=self.d,
-                                                    max_gap=self.opt.tsize,
+                                                    min_length=self.minlen,
+                                                    max_gap=self.maxgap,
                                                     call_summits=call_summits,
                                                     auto_cutoff=self.opt.cutoff_analysis )
         elif self.log_qvalue != None:
             if self.opt.broad:
                 self.info("#3 Call broad peaks with given level1 -log10qvalue cutoff and level2: %f, %f..." % (self.log_qvalue,self.opt.log_broadcutoff) )
-                peaks = scorecalculator.call_broadpeaks(['q',], lvl1_cutoff_s=[self.log_qvalue,],lvl2_cutoff_s=[self.opt.log_broadcutoff,],min_length=self.d,
-                                                        lvl1_max_gap=self.opt.tsize,lvl2_max_gap=self.d*4)
+                peaks = scorecalculator.call_broadpeaks(['q',],
+                                                    lvl1_cutoff_s=[self.log_qvalue,],
+                                                    lvl2_cutoff_s=[self.opt.log_broadcutoff,],
+                                                    min_length=self.minlen,
+                                                    lvl1_max_gap=self.maxgap,
+                                                    lvl2_max_gap=self.maxgap*4,
+                                                    auto_cutoff=self.opt.cutoff_analysis )
             else:
                 peaks = scorecalculator.call_peaks( ['q',], [self.log_qvalue,],
-                                                    min_length=self.d,
-                                                    max_gap=self.opt.tsize,
+                                                    min_length=self.minlen,
+                                                    max_gap=self.maxgap,
                                                     call_summits=call_summits,
                                                     auto_cutoff=self.opt.cutoff_analysis )
         scorecalculator.destroy()
