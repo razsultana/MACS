@@ -65,7 +65,8 @@ def main():
           url='http://github.com/taoliu/MACS/',
           package_dir={'MACS2' : 'MACS2'},
           packages=['MACS2', 'MACS2.IO'],#, 'MACS2.data'],
-          #package_data={'MACS2': ['data/*.dat']},          
+          #package_data={'MACS2': ['data/*.dat']},         
+          zip_safe=False, 
           scripts=['bin/macs2',
                    ],
           classifiers=[
